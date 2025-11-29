@@ -1,76 +1,43 @@
 workflows:
-  android-apk-workflow:
-    name: Android APK Release (Optimized)
+  android-workflow:
+    name: Android Release Build
     max_build_duration: 120
-    instance_type: mac_mini_m1
     environment:
       flutter: stable
       java: 17
-      groups:
-        - google_play # Optional: jika ada env variables
-    
+
     scripts:
       - name: Get Flutter packages
         script: |
           flutter pub get
-          
+
       - name: Flutter Clean
         script: |
           flutter clean
-          
-      - name: Build Optimized APK (ARM64)
+
+      - name: Build Optimized APK
         script: |
-          echo "🔨 Building optimized APK for ARM64..."
+          # Build arm64 APK only (smallest size, most common device)
           flutter build apk --release \
             --obfuscate \
             --split-debug-info=build/app/outputs/symbols \
             --split-per-abi \
             --target-platform android-arm64 \
             --tree-shake-icons \
-            --shrink \
-            --dart-define=flutter.inspector.structuredErrors=false
-          
-          # Rename untuk clarity
+            --no-shrink
+
+          # Rename output file
           mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
-             build/app/outputs/flutter-apk/safe-exam-app-arm64-optimized.apk
-          
-          # Show file size
-          ls -lh build/app/outputs/flutter-apk/safe-exam-app-arm64-optimized.apk
-          
-      - name: Build Universal APK (All ABIs) - Optional
-        script: |
-          echo "🔨 Building universal APK (fallback for older devices)..."
-          flutter build apk --release \
-            --obfuscate \
-            --split-debug-info=build/app/outputs/symbols-universal \
-            --tree-shake-icons \
-            --shrink \
-            --dart-define=flutter.inspector.structuredErrors=false
-          
-          # Rename
-          mv build/app/outputs/flutter-apk/app-release.apk \
-             build/app/outputs/flutter-apk/safe-exam-app-universal.apk
-          
-          # Show file size
-          ls -lh build/app/outputs/flutter-apk/safe-exam-app-universal.apk
-          
+             build/app/outputs/flutter-apk/safe-exam-app-v1.0.0-arm64.apk
+
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
       - build/app/outputs/symbols/**
-      - build/app/outputs/symbols-universal/**
-      
+
     publishing:
       email:
         recipients:
-          - your-email@example.com # GANTI dengan email Anda
+          - admin@example.com
         notify:
           success: true
           failure: true
-      
-      # Optional: Slack notification
-      # slack:
-      #   channel: '#builds'
-      #   notify_on_build_start: false
-      #   notify:
-      #     success: true
-      #     failure: true
