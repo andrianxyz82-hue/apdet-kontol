@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'package:go_router/go_router.dart';
 import '../../core/app_theme.dart';
 import '../../services/course_service.dart';
 import '../../services/exam_service.dart';
@@ -132,6 +133,41 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                             ),
                           ],
                         ),
+                  const SizedBox(height: 24),
+
+                  // Quick Actions
+                  Text(
+                    'Quick Actions',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildActionButton(
+                          'CBT Settings',
+                          Icons.settings_ethernet,
+                          const Color(0xFF7C7CFF),
+                          () => context.push('/teacher/cbt-settings'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildActionButton(
+                          'Create Exam',
+                          Icons.add_circle_outline,
+                          Colors.green,
+                          () {
+                            // Navigate to create exam or switch tab
+                            // For now just a placeholder action or navigation
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 24),
 
                   // Recent Activity

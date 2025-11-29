@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../../core/app_theme.dart';
+import '../../services/lock_service.dart';
 import 'dart:async';
 
 class ExamDetailScreen extends StatefulWidget {
@@ -23,6 +24,7 @@ class _ExamDetailScreenState extends State<ExamDetailScreen> {
   int _currentQuestionIndex = 0;
   final Map<int, String> _answers = {};
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final LockService _lockService = LockService();
 
   static const platform = MethodChannel('com.eskalasi.safeexam/lock');
 
@@ -60,6 +62,10 @@ class _ExamDetailScreenState extends State<ExamDetailScreen> {
   }
 
   Future<void> _startExam() async {
+    // Pre-Exam Security Check
+    final isSafe = await _checkSecurity();
+    if (!isSafe) return;
+
     final confirmed = await _showConfirmationDialog();
     if (confirmed != true) return;
 
@@ -68,7 +74,37 @@ class _ExamDetailScreenState extends State<ExamDetailScreen> {
     });
 
     await _enableLockMode();
+    await _enableLockMode();
     _startTimer();
+  }
+
+  Future<bool> _checkSecurity() async {
+    // Check for overlays/floating apps
+    final hasFocus = await _lockService.hasWindowFocus();
+    if (!hasFocus) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            backgroundColor: const Color(0xFF2D2D44),
+            title: const Text('Security Check Failed', style: TextStyle(color: Colors.red)),
+            content: const Text(
+              'Mohon matikan Panel Pintar, Menu Asisten, atau Aplikasi Mengambang untuk memulai ujian.',
+              style: TextStyle(color: Colors.white),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+      return false;
+    }
+    return true;
   }
 
   Future<void> _enableLockMode() async {

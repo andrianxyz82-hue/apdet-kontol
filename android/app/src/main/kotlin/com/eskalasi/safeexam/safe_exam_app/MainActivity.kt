@@ -16,14 +16,18 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "com.eskalasi.safeexam/lock"
     private var originalVolume: Int = 0
+    private var isExamActive: Boolean = false
+    private var methodChannel: MethodChannel? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
+        methodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
+        methodChannel?.setMethodCallHandler { call, result ->
             when (call.method) {
                 "startLockTask" -> {
                     try {
+                        isExamActive = true
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                             // Hide system bars and prevent gesture navigation
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -60,6 +64,7 @@ class MainActivity: FlutterActivity() {
                 }
                 "stopLockTask" -> {
                     try {
+                        isExamActive = false
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                             // Restore system bars
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -212,6 +217,13 @@ class MainActivity: FlutterActivity() {
                         result.error("ERROR", e.message, null)
                     }
                 }
+                "hasWindowFocus" -> {
+                    try {
+                        result.success(hasWindowFocus())
+                    } catch (e: Exception) {
+                        result.error("ERROR", e.message, null)
+                    }
+                }
                 else -> {
                     result.notImplemented()
                 }
@@ -219,6 +231,14 @@ class MainActivity: FlutterActivity() {
         }
     }
     
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (isExamActive && !hasFocus) {
+            // If exam is active and we lose focus, it might be due to an overlay or system dialog
+            methodChannel?.invokeMethod("onOverlayDetected", null)
+        }
+    }
+
     // Prevent Picture-in-Picture when user tries to leave the app
     override fun onUserLeaveHint() {
         // Don't call super to prevent PiP activation

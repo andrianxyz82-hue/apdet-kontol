@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'dart:math' as math;
 import '../../core/app_theme.dart';
-import '../../services/notification_service.dart';
 import '../../services/course_service.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/widgets/neon_background_painter.dart';
@@ -24,7 +23,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   @override
   void initState() {
     super.initState();
-    NotificationService().initialize();
     _generateNeonDots();
     _loadPopularCourses();
   }
@@ -182,9 +180,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
                 const SizedBox(height: 30),
 
-                // 3. Categories List
+                // 3. CBT ESKALASI Card
                 const Text(
-                  'More Courses',
+                  'CBT ESKALASI',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -192,16 +190,81 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                SizedBox(
-                  height: 90,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF2D2D44), Color(0xFF1E1E2C)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(color: const Color(0xFF7C7CFF).withOpacity(0.3)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF7C7CFF).withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
                     children: [
-                      _buildCategoryItem(Icons.code_rounded, 'Programming'),
-                      _buildCategoryItem(Icons.brush_rounded, 'Design'),
-                      _buildCategoryItem(Icons.campaign_rounded, 'Marketing'),
-                      _buildCategoryItem(Icons.calculate_rounded, 'Math'),
-                      _buildCategoryItem(Icons.language_rounded, 'Language'),
+                      const Icon(
+                        Icons.computer,
+                        size: 48,
+                        color: Color(0xFF7C7CFF),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Ujian Berbasis Komputer',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Masuk ke mode ujian aman',
+                        style: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            context.push('/student/cbt-exam');
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF7C7CFF),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.lock_outline, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                'Mulai Ujian via CBT',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),

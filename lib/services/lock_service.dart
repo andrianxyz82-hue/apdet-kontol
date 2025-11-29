@@ -1,7 +1,21 @@
+import 'dart:async';
 import 'package:flutter/services.dart';
 
 class LockService {
   static const MethodChannel _channel = MethodChannel('com.eskalasi.safeexam/lock');
+
+  final _overlayDetectedController = StreamController<void>.broadcast();
+  Stream<void> get onOverlayDetected => _overlayDetectedController.stream;
+
+  LockService() {
+    _channel.setMethodCallHandler(_handleMethodCall);
+  }
+
+  Future<void> _handleMethodCall(MethodCall call) async {
+    if (call.method == 'onOverlayDetected') {
+      _overlayDetectedController.add(null);
+    }
+  }
 
   Future<bool> startLockTask() async {
     try {
@@ -19,6 +33,26 @@ class LockService {
       return result;
     } on PlatformException catch (e) {
       print("Failed to stop lock task: '${e.message}'.");
+      return false;
+    }
+  }
+
+  Future<bool> setSecureFlag() async {
+    try {
+      final bool result = await _channel.invokeMethod('setSecureFlag');
+      return result;
+    } on PlatformException catch (e) {
+      print("Failed to set secure flag: '${e.message}'.");
+      return false;
+    }
+  }
+
+  Future<bool> clearSecureFlag() async {
+    try {
+      final bool result = await _channel.invokeMethod('clearSecureFlag');
+      return result;
+    } on PlatformException catch (e) {
+      print("Failed to clear secure flag: '${e.message}'.");
       return false;
     }
   }
@@ -80,6 +114,16 @@ class LockService {
     } on PlatformException catch (e) {
       print("Failed to prevent floating windows: '${e.message}'.");
       return false;
+    }
+  }
+
+  Future<bool> hasWindowFocus() async {
+    try {
+      final bool result = await _channel.invokeMethod('hasWindowFocus');
+      return result;
+    } on PlatformException catch (e) {
+      print("Failed to check window focus: '${e.message}'.");
+      return true; // Default to true to avoid blocking if check fails
     }
   }
 }

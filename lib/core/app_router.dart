@@ -15,6 +15,8 @@ import 'package:safe_exam_app/features/exam/exam_result_screen.dart';
 import 'package:safe_exam_app/features/teacher/monitoring/monitoring_dashboard_screen.dart';
 import 'package:safe_exam_app/features/teacher/monitoring/exam_results_list_screen.dart';
 import 'package:safe_exam_app/features/student/widgets/custom_bottom_nav_bar.dart';
+import 'package:safe_exam_app/features/teacher/cbt_url_screen.dart';
+import 'package:safe_exam_app/features/exam/cbt_exam_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -34,6 +36,10 @@ class AppRouter {
         path: '/student/home',
         builder: (context, state) => const StudentBottomNav(),
       ),
+      GoRoute(
+        path: '/student/cbt-exam',
+        builder: (context, state) => const CbtExamScreen(),
+      ),
       
       // Teacher Routes
       GoRoute(
@@ -47,6 +53,10 @@ class AppRouter {
           final examData = state.extra as Map<String, dynamic>;
           return ExamResultsListScreen(examId: id, examData: examData);
         },
+      ),
+      GoRoute(
+        path: '/teacher/cbt-settings',
+        builder: (context, state) => const CbtUrlScreen(),
       ),
       
       // Exam Routes

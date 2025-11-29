@@ -28,6 +28,7 @@ class _TakeExamScreenState extends State<TakeExamScreen> with WidgetsBindingObse
   
   Timer? _timer;
   Timer? _lockCheckTimer;
+  StreamSubscription? _overlaySubscription;
   int _remainingSeconds = 0;
   bool _isLocked = false;
 
@@ -37,7 +38,33 @@ class _TakeExamScreenState extends State<TakeExamScreen> with WidgetsBindingObse
     WidgetsBinding.instance.addObserver(this);
     _enableLockMode();
     _startLockCheck();
+    _setupOverlayListener();
     _loadExam();
+  }
+
+  void _setupOverlayListener() {
+    _overlaySubscription = _lockService.onOverlayDetected.listen((_) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            backgroundColor: const Color(0xFF2D2D44),
+            title: const Text('Security Alert', style: TextStyle(color: Colors.red)),
+            content: const Text(
+              'Floating app or smart panel detected! Please close all overlays and floating apps immediately to continue the exam.',
+              style: TextStyle(color: Colors.white),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('I have closed it'),
+              ),
+            ],
+          ),
+        );
+      }
+    });
   }
 
   void _startLockCheck() {
@@ -53,9 +80,9 @@ class _TakeExamScreenState extends State<TakeExamScreen> with WidgetsBindingObse
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _disableLockMode();
-    _disableLockMode();
     _timer?.cancel();
     _lockCheckTimer?.cancel();
+    _overlaySubscription?.cancel();
     super.dispose();
   }
 
@@ -70,11 +97,13 @@ class _TakeExamScreenState extends State<TakeExamScreen> with WidgetsBindingObse
   Future<void> _enableLockMode() async {
     await _lockService.startLockTask();
     await _lockService.disableGestureNavigation();
+    await _lockService.setSecureFlag();
   }
 
   Future<void> _disableLockMode() async {
     await _lockService.stopLockTask();
     await _lockService.enableGestureNavigation();
+    await _lockService.clearSecureFlag();
   }
 
   Future<void> _loadExam() async {
@@ -282,43 +311,35 @@ class _TakeExamScreenState extends State<TakeExamScreen> with WidgetsBindingObse
           automaticallyImplyLeading: false, // Hide default back button
           backgroundColor: isDark ? const Color(0xFF2D2D44) : Colors.white,
           elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.close, color: isDark ? Colors.white : AppTheme.textDark),
-            onPressed: () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  backgroundColor: const Color(0xFF2D2D44),
-                  title: const Text('Exit Exam?', style: TextStyle(color: Colors.white)),
-                  content: const Text(
-                    'Your progress will be lost. Are you sure?',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Exit', style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
-                ),
-              );
-              if (confirm == true && mounted) {
-                await _disableLockMode();
-                Navigator.pop(context);
-              }
-            },
-          ),
           title: Text(
             _exam?['title'] ?? 'Exam',
             style: TextStyle(color: isDark ? Colors.white : AppTheme.textDark),
           ),
           actions: [
+            // Submit Button (Replaces Cakra/Exit)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+              child: ElevatedButton(
+                onPressed: (_answers.length == _questions.length && !_submitting)
+                    ? () => _submitExam()
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: (_answers.length == _questions.length)
+                      ? const Color(0xFF7C7CFF)
+                      : Colors.grey.withOpacity(0.3),
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: Colors.grey.withOpacity(0.3),
+                  disabledForegroundColor: Colors.grey,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('Submit'),
+              ),
+            ),
             Container(
-              margin: const EdgeInsets.only(right: 16),
+              margin: const EdgeInsets.only(right: 16, left: 8),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: _remainingSeconds < 300 ? Colors.red.withOpacity(0.2) : const Color(0xFF7C7CFF).withOpacity(0.2),
